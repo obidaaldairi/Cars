@@ -1,0 +1,75 @@
+﻿@using Models
+@model SearchModel
+@{
+    ViewData["Title"] = "Home Page";
+}
+
+<div class="container mt-5">
+    @if (!string.IsNullOrEmpty(ViewBag.ErrorMessage))
+    {
+        <div class="alert alert-danger alert-custom" role="alert">
+            <i class="fas fa-exclamation-circle"></i> @ViewBag.ErrorMessage
+        </div>
+    }
+    @* 
+    @if (!string.IsNullOrEmpty(ViewBag.InfoMessage))
+    {
+        <div class="alert alert-info alert-custom" role="alert">
+            <i class="fas fa-info-circle"></i> @ViewBag.InfoMessage
+        </div>
+    } *@
+    <form asp-action="Search" method="post" id="searchForm">
+        <div class="row">
+            <div class="col-4">
+                <label for="dropdown1" class="form-label">Car Makes</label>
+                <select asp-for="YearID" class="form-select">
+                    <option value="" selected>Choose Makes...</option>
+                    @foreach (var make in Model.Makes)
+                    {
+                        <option value="@make.Make_ID">@make.Make_Name</option>
+                    }
+                </select>
+                <span asp-validation-for="YearID" class="text-danger"></span>
+            </div>
+
+           @*  <!-- Second -->
+            <div class="col-4">
+                <label for="dropdown2" class="form-label">Vehicle Type</label>
+                <select class="form-select" id="dropdown2">
+                    <option selected>Choose Type...</option>
+                    <option value="apple">Apple</option>
+                    <option value="samsung">Samsung</option>
+                    <option value="nike">Nike</option>
+                    <option value="adidas">Adidas</option>
+                    <option value="sony">Sony</option>
+                </select>
+            </div>
+
+            <!-- Third-->
+            <div class="col-4">
+                <label for="dropdown3" class="form-label">Car Model</label>
+                <select class="form-select" id="dropdown3">
+                    <option selected>Choose Model...</option>
+                    <option value="0-50">$0 - $50</option>
+                    <option value="51-100">$51 - $100</option>
+                    <option value="101-200">$101 - $200</option>
+                    <option value="201-500">$201 - $500</option>
+                    <option value="500+">$500+</option>
+                </select>
+            </div> *@
+        </div>
+
+        <div class="row mt-4">
+            <div class="col-12">
+                <button type="submit" class="btn btn-primary">Apply Filters</button>
+                @* <button type="button" class="btn btn-secondary ms-2">Reset</button> *@
+            </div>
+        </div>
+    </form>
+</div>
+
+@section Scripts {
+    @{
+        <partial name="_ValidationScriptsPartial" />
+    }
+}
