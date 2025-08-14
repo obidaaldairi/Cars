@@ -44,6 +44,43 @@ namespace Cars.Controllers
 
         }
 
+        [HttpGet]
+        public async Task<IActionResult> GetVehicleTypeByMakeId(int makeId)
+        {
+            try
+            {
+                var data = new VehicleType();
+                if (makeId is 0)
+                    return BadRequest();
+                var response = await _data.GetVehicleTypesForMake(makeId);
+                if (response.IsSuccess && response.Data is not null)
+                {
+                    data = response.Data.FirstOrDefault();
+                }
+                return Ok(data);
+            }
+            catch (Exception)
+            {
+                return BadRequest("An error occurred while loading the page. Please try again.");
+            }
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> Search(SearchModel model)
+        {
+            try
+            {
+
+                return View(model);
+            }
+            catch (Exception ex)
+            {
+                ViewBag.ErrorMessage = "An error occurred while searching. Please try again.";
+            }
+
+            return View("Index", model);
+        }
+
         public IActionResult Privacy()
         {
             return View();

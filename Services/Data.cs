@@ -10,7 +10,7 @@ namespace Services
         public Data(HttpClient httpClient)
         {
             _httpClient = httpClient;
-            _baseUrl ="https://vpic.nhtsa.dot.gov/api";
+            _baseUrl = "https://vpic.nhtsa.dot.gov/api";
 
         }
 
@@ -64,9 +64,49 @@ namespace Services
             throw new NotImplementedException();
         }
 
-        public Task<ApiResponse<List<VehicleType>>> GetVehicleTypesForMake(int makeId)
+        public async Task<ApiResponse<List<VehicleType>>> GetVehicleTypesForMake(int makeId)
         {
-            throw new NotImplementedException();
+            try
+            {
+
+                var url = $"{_baseUrl}/vehicles/GetVehicleTypesForMakeId/{makeId}?format=json";
+                var response = await _httpClient.GetAsync(url);
+
+                if (response.IsSuccessStatusCode)
+                {
+                    var content = await response.Content.ReadAsStringAsync();
+                    var apiResponse = JsonConvert.DeserializeObject<CarsResponse<VehicleType>>(content);
+
+                    if (apiResponse?.Results != null)
+                    {
+                        var sortedTypes = apiResponse.Results
+                            .OrderBy(vt => vt.VehicleTypeName)
+                            .ToList();
+
+
+                        return new ApiResponse<List<VehicleType>>
+                        {
+                            IsSuccess = true,
+                            Data = sortedTypes
+                        };
+                    }
+                }
+
+                return new ApiResponse<List<VehicleType>>
+                {
+                    IsSuccess = false,
+                    ErrorMessage = $"API request failed with status: {response.StatusCode}"
+                };
+            }
+
+            catch (Exception ex)
+            {
+                return new ApiResponse<List<VehicleType>>
+                {
+                    IsSuccess = false,
+                    ErrorMessage = $"Sommething went wrong : {ex.Message}"
+                };
+            }
         }
     }
 }

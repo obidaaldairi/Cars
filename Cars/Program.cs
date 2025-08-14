@@ -1,10 +1,10 @@
-using Services.Extensions;
+using Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddControllersWithViews();
 builder.Services.AddHttpClient();
-builder.Services.AddApiService();
+builder.Services.AddScoped<IData, Data>();
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowAll", policy =>
