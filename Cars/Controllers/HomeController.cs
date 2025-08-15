@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Mvc.Rendering;
 using Models;
 using Services;
 using System.Diagnostics;
+using System.Reflection;
 using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace Cars.Controllers
@@ -65,20 +66,23 @@ namespace Cars.Controllers
             }
         }
 
-        [HttpPost]
-        public async Task<IActionResult> Search(SearchModel model)
+        [HttpGet]
+        public async Task<IActionResult> Search(int makeId, int VehicleTypeId, int YearID)
         {
             try
             {
-
-                return View(model);
+                var data = new CarModel();
+                var response = await _data.GetModelsForMakeAndYear(makeId, YearID);
+                if (response.IsSuccess && response.Data != null)
+                {
+                    data = response.Data.FirstOrDefault();
+                }
+                return Ok(data);
             }
             catch (Exception ex)
             {
-                ViewBag.ErrorMessage = "An error occurred while searching. Please try again.";
+                return BadRequest("An error occurred while loading the page. Please try again.");
             }
-
-            return View("Index", model);
         }
 
         public IActionResult Privacy()

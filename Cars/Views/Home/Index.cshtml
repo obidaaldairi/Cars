@@ -3,7 +3,6 @@
 @{
     ViewData["Title"] = "Home Page";
 }
-
 <div class="container mt-5">
     @if (!string.IsNullOrEmpty(ViewBag.ErrorMessage))
     {
@@ -11,18 +10,11 @@
             <i class="fas fa-exclamation-circle"></i> @ViewBag.ErrorMessage
         </div>
     }
-    @* 
-    @if (!string.IsNullOrEmpty(ViewBag.InfoMessage))
-    {
-        <div class="alert alert-info alert-custom" role="alert">
-            <i class="fas fa-info-circle"></i> @ViewBag.InfoMessage
-        </div>
-    } *@
-    <form asp-action="Search" method="post" id="searchForm">
+    <form id="searchForm">
         <div class="row">
             <div class="col-4">
-                <label for="dropdown1" class="form-label">Car Makes</label>
-                <select asp-for="MakeId" class="form-select" onchange="GetVehicleTypeByMakeId(this.value)">
+                <label for="makeDropdown" class="form-label">Car Makes</label>
+                <select asp-for="MakeId" id="makeDropdown" class="form-select make-dropdown" onchange="GetVehicleTypeByMakeId(this.value)">
                     <option value="" selected>Choose Makes...</option>
                     @foreach (var make in Model.Makes)
                     {
@@ -32,16 +24,16 @@
                 <span asp-validation-for="MakeId" class="text-danger"></span>
             </div>
 
-
             <div class="col-4">
                 <label class="form-label">Vehicle Type</label>
                 <input type="text" id="vehicleTypeText" class="form-control" readonly placeholder="Select a make first">
                 <input type="hidden" id="vehicleTypeId" name="VehicleTypeId">
+                <span asp-validation-for="MakeId" class="text-danger"></span>
             </div>
 
             <div class="col-4">
-                <label for="dropdown1" class="form-label">Years</label>
-                <select asp-for="YearID" class="form-select">
+                <label for="yearDropdown" class="form-label">Years</label>
+                <select asp-for="YearID" id="yearDropdown" class="form-select year-dropdown">
                     <option value="" selected>Choose Year...</option>
                     @foreach (var item in Model.Years)
                     {
@@ -54,45 +46,126 @@
 
         <div class="row mt-4">
             <div class="col-12">
-                <button type="submit" class="btn btn-primary">Apply Filters</button>
-                @* <button type="button" class="btn btn-secondary ms-2">Reset</button> *@
+                <button type="submit" class="btn btn-primary" id="searchButton">
+                    <span id="buttonText">Apply Filters</span>
+                    <span id="buttonSpinner" class="spinner-border spinner-border-sm d-none" role="status" aria-hidden="true"></span>
+                </button>
             </div>
         </div>
     </form>
+    <div class="row mt-4">
+        <div class="col-12">
+            <div id="searchResults"></div>
+        </div>
+    </div>
 </div>
-<script>
-    function GetVehicleTypeByMakeId(makeId) {
-        debugger;
-        if (makeId === "")
-        {
-            $('#vehicleTypeText').val('Select a make first');
-            $('#vehicleTypeId').val('');
-            return;
-        }
 
-        $.ajax({
-            url: '@Url.Action("GetVehicleTypeByMakeId", "Home")',
-            type: 'GET',
-            data: { makeId: makeId },
-                success: function(data) {
-        console.log(data);
 
-        if (data && data.vehicleTypeId) {
-            $('#vehicleTypeText').val(data.vehicleTypeName);
-            $('#vehicleTypeId').val(data.vehicleTypeId);
-        } else {
-            $('#vehicleTypeText').val('No Vehicle Type Available');
-            $('#vehicleTypeId').val('');
-        }
-    },
-            error: function() {
-                alert('Error retrieving data');
-            }
-        });
-    }
-</script>
+
 @section Scripts {
     @{
         <partial name="_ValidationScriptsPartial" />
     }
+    <script>
+        $(document).ready(function() {
+            $('#searchForm').on('submit', function(e) {
+                e.preventDefault(); 
+                if ($(this).valid()) {
+                    Search();
+                }
+            });
+        });
+
+        function GetVehicleTypeByMakeId(makeId) {
+
+            if (makeId === "" || makeId === null) {
+                $('#vehicleTypeText').val('Select a make first');
+                $('#vehicleTypeId').val('');
+                return;
+            }
+            $('#vehicleTypeText').val('Loading...');
+
+            $.ajax({
+                url: '@Url.Action("GetVehicleTypeByMakeId", "Home")',
+                type: 'GET',
+                data: { makeId: makeId },
+                success: function(data) {
+
+                    if (data && data.vehicleTypeId) {
+                        $('#vehicleTypeText').val(data.vehicleTypeName);
+                        $('#vehicleTypeId').val(data.vehicleTypeId);
+                    } else {
+                        $('#vehicleTypeText').val('No Vehicle Type Available');
+                        $('#vehicleTypeId').val('');
+                    }
+                },
+                error: function(xhr, status, error) {
+                    console.error('Error getting vehicle type:', error);
+                    $('#vehicleTypeText').val('Error loading vehicle type');
+                    $('#vehicleTypeId').val('');
+                    alert('Error retrieving vehicle type data: ' + error);
+                }
+            });
+        }
+
+        function Search() {
+            var makeId = $('#makeDropdown').val();
+            var vehicleTypeId = $('#vehicleTypeId').val();
+            var yearId = $('#yearDropdown').val();
+            ShowLoading(true);
+
+            $.ajax({
+                url: '@Url.Action("Search", "Home")',
+                type: 'GET',
+                data: {
+                    makeId: makeId,
+                    vehicleTypeId: vehicleTypeId,
+                    yearID: yearId
+                },
+                success: function(data) {
+                    ShowLoading(false);
+
+                    if (data && data.model_ID) {
+                var html = `
+                    <div class="card">
+                        <div class="card-body">
+                            <h5 class="card-title">Search Results</h5>
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <p><strong>Model ID:</strong> ${data.model_ID}</p>
+                                    <p><strong>Model Name:</strong> ${data.model_Name}</p>
+                                </div>
+                                <div class="col-md-6">
+                                    <p><strong>Make ID:</strong> ${data.make_ID}</p>
+                                    <p><strong>Make Name:</strong> ${data.make_Name}</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                $('#searchResults').html(html);
+            }
+            else {
+                        $('#searchResults').html('<div class="alert alert-info">No results found.</div>');
+                    }
+                },
+                error: function(xhr, status, error) {
+                    ShowLoading(false);
+                    $('#searchResults').html('<div class="alert alert-danger">Error occurred while searching. Please try again.</div>');
+                }
+            });
+        }
+
+        function ShowLoading(isLoading) {
+            if (isLoading) {
+                $('#searchButton').prop('disabled', true);
+                $('#buttonText').addClass('d-none');
+                $('#buttonSpinner').removeClass('d-none');
+            } else {
+                $('#searchButton').prop('disabled', false);
+                $('#buttonText').removeClass('d-none');
+                $('#buttonSpinner').addClass('d-none');
+            }
+        }
+    </script>
 }

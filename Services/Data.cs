@@ -59,9 +59,49 @@ namespace Services
             }
         }
 
-        public Task<ApiResponse<List<CarModel>>> GetModelsForMakeAndYear(int makeId, int year)
+        public async Task<ApiResponse<List<CarModel>>> GetModelsForMakeAndYear(int makeId, int year)
         {
-            throw new NotImplementedException();
+            try
+            {
+                var url = $"{_baseUrl}/vehicles/GetModelsForMakeIdYear/makeId/{makeId}/modelyear/{year}?format=json";
+                var response = await _httpClient.GetAsync(url);
+
+                if (response.IsSuccessStatusCode)
+                {
+                    var content = await response.Content.ReadAsStringAsync();
+                    var apiResponse = JsonConvert.DeserializeObject<CarsResponse<CarModel>>(content);
+
+                    if (apiResponse?.Results != null)
+                    {
+                        var sortedModels = apiResponse.Results
+                            .GroupBy(m => m.Model_Name)
+                            .Select(g => g.First())
+                            .OrderBy(m => m.Model_Name)
+                            .ToList();
+
+
+                        return new ApiResponse<List<CarModel>>
+                        {
+                            IsSuccess = true,
+                            Data = sortedModels
+                        };
+                    }
+                }
+
+                return new ApiResponse<List<CarModel>>
+                {
+                    IsSuccess = false,
+                    ErrorMessage = $"API request failed with status: {response.StatusCode}"
+                };
+            }
+            catch (Exception ex)
+            {
+                return new ApiResponse<List<CarModel>>
+                {
+                    IsSuccess = false,
+                    ErrorMessage = $"Sommething went wrong : {ex.Message}"
+                };
+            }
         }
 
         public async Task<ApiResponse<List<VehicleType>>> GetVehicleTypesForMake(int makeId)
