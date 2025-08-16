@@ -12,8 +12,7 @@ EXPOSE 8081
 FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
 ARG BUILD_CONFIGURATION=Release
 WORKDIR /src
-#COPY ["Cars/Cars.csproj", "Cars/"]
-COPY ["Cars.csproj", "."]
+COPY ["Cars/Cars.csproj", "Cars/"]
 
 RUN dotnet restore "./Cars/Cars.csproj"
 COPY . .
