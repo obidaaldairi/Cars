@@ -1,0 +1,6 @@
+services:
+  cars:
+    image: ${DOCKER_REGISTRY-}cars
+    build:
+      context: .
+      dockerfile: Cars/Dockerfile
