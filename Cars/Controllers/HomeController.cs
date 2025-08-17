@@ -16,6 +16,7 @@ namespace Cars.Controllers
 
         public HomeController(ILogger<HomeController> logger, IData data)
         {
+            //
             _logger = logger;
             _data = data;
         }
